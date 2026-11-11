@@ -24,8 +24,10 @@ In GitHub Actions, open **Publish to NuGet.org**, select `main`, and enter the
 CI run ID and package SHA-256. The workflow checks the digest and publishes
 the same archive using NuGet.org Trusted Publishing.
 
-After NuGet.org indexes the release, verify the version and package owner on
-the listing.
+After NuGet.org indexes the release, verify the version, owner, and gold
+Bitavu icon on the package listing. Download the published archive and
+compare its package entries with the reviewed CI artifact. NuGet.org may
+add a repository signature to the archive.
 
 ## Configure Trusted Publishing
 
