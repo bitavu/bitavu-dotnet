@@ -93,6 +93,10 @@ code. Pass the caller's cancellation token and an operation ID for the render
 job. Reuse that ID with the same input when retrying. Replace the sample
 template ID, revision, and data with a request you tested in Studio.
 
+Follow the [ASP.NET Core support guide](https://bitavu.com/support/dotnet) for a
+complete invoice example, from configuring the API key to returning the PDF
+as a download.
+
 ## Render a PDF
 
 In Studio, save a template version and use **Integrations → Prepare a template

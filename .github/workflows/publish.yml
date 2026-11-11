@@ -22,7 +22,6 @@ jobs:
   publish:
     if: >-
       github.repository == 'bitavu/bitavu-dotnet' &&
-      github.event.repository.private &&
       github.ref == 'refs/heads/main' &&
       github.actor == 'muveaio' &&
       github.triggering_actor == 'muveaio'
