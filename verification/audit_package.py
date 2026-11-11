@@ -12,10 +12,13 @@ PACKAGE_ID = "Bitavu.Client"
 FRAMEWORKS = {"net10.0", "net11.0"}
 DESCRIPTION = "PDF generation for .NET. Generate PDFs from Bitavu templates and JSON data with this C# client."
 TAGS = "bitavu pdf pdf-generation pdf-rendering reporting templates"
+ICON = "icon.png"
+# Require the reviewed 128 x 128 Bitavu icon, including its exact PNG metadata.
+ICON_SHA256 = "9faa61b263c85db017338fc73c70669ffb357f13987e53d686dcbec1563af8ae"
 CORE_PROPERTIES = "package/services/metadata/core-properties/nuget.psmdcp"
 ENTRIES = {
     "[Content_Types].xml", "_rels/.rels", f"{PACKAGE_ID}.nuspec", CORE_PROPERTIES,
-    "LICENSE", "README.md",
+    "LICENSE", "README.md", ICON,
 } | {
     f"lib/{framework}/{PACKAGE_ID}.{extension}"
     for framework in FRAMEWORKS for extension in ("dll", "xml")
@@ -61,7 +64,9 @@ def audit(path):
 
         for name in sorted(ENTRIES):
             contents = package.read(name)
-            if name.endswith(".dll"):
+            if name == ICON:
+                require(hashlib.sha256(contents).hexdigest() == ICON_SHA256, "unreviewed package icon")
+            elif name.endswith(".dll"):
                 # Scan the managed metadata and the UTF-16 string heap and resources.
                 for match in re.finditer(rb"[ -~]{4,}|(?:[ -~]\x00){4,}", contents):
                     scan(name, match.group().replace(b"\x00", b"").decode("ascii"))
@@ -76,13 +81,14 @@ def audit(path):
         version = values(metadata).get("version", "")
         require(re.fullmatch(r"\d+\.\d+\.\d+(?:-[a-z\d.]+)?", version), "unexpected version format")
         require(path.name == f"{PACKAGE_ID}.{version}.nupkg", "filename and package identity differ")
-        require(len(metadata) == 10 and values(metadata) == {
+        require(len(metadata) == 11 and values(metadata) == {
             "id": PACKAGE_ID,
             "version": version,
             "authors": "bitavu.com",
             "license": "MIT",
             "licenseUrl": "https://licenses.nuget.org/MIT",
             "readme": "README.md",
+            "icon": ICON,
             "projectUrl": "https://bitavu.com/",
             "description": DESCRIPTION,
             "tags": TAGS,

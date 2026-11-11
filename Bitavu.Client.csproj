@@ -12,6 +12,7 @@
     <PackageProjectUrl>https://bitavu.com</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageTags>bitavu;pdf;pdf-generation;pdf-rendering;reporting;templates</PackageTags>
     <PackageOutputPath>$(MSBuildProjectDirectory)/artifacts</PackageOutputPath>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -28,7 +29,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BitavuClient.cs;BitavuApiException.cs;BitavuPdf.cs;BitavuTemplates.cs" />
-    <None Include="README.md;LICENSE" Pack="true" PackagePath="/" />
+    <None Include="README.md;LICENSE;icon.png" Pack="true" PackagePath="/" />
     <InternalsVisibleTo Include="Bitavu.Client.Verification" />
   </ItemGroup>
 </Project>
