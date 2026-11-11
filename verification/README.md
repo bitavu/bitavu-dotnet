@@ -1,13 +1,12 @@
-# Local package verification
+# Verify a package build
 
-Run from the client project directory with a stable .NET 11 SDK, the .NET 10
-and .NET 11 runtimes, and Python 3.
-The same command runs in GitHub Actions. It uses a fresh restore cache so the
-consumer loads the exact package just built.
+Install the .NET 11 SDK, the .NET 10 and 11 runtimes, PowerShell 7, and Python 3.
+From the repository root, run the same check used by GitHub Actions.
 
 ```powershell
 pwsh -File verification/check-package.ps1
 ```
 
-The consumer restores from the local package directory and uses synthetic HTTP
-responses. The audit prints the SHA-256 of the inspected archive.
+The script builds a NuGet package in `artifacts/`, checks its metadata and
+contents, and prints its SHA-256. It then installs that exact package into a
+fresh cache and tests both target frameworks with simulated API responses.

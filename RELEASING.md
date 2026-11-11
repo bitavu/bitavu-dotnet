@@ -1,33 +1,43 @@
-# Publish Bitavu.Client to NuGet.org
+# Release Bitavu.Client
 
-CI builds and audits the package and runs the package consumer on .NET 10
-and .NET 11. A successful push to `main` retains the verified package as
-the `nuget-package` artifact for seven days.
+Bitavu.Client releases are published to [NuGet.org](https://www.nuget.org/packages/Bitavu.Client)
+under the `bitavucom` organization.
 
-Create the [NuGet.org Trusted Publishing policy](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)
-while signed in as `bitavu` and select `bitavucom` as the package owner.
-The workflow signs in as the policy creator. Use the following settings.
+## Prepare a release
 
-| Setting | Value |
+1. Set the release version in `Bitavu.Client.csproj`. Update the install
+   command in `README.md` and the package reference in
+   `verification/Verification.csproj` to match.
+2. Run the [package checks](verification/README.md). They build the package,
+   audit its contents, and test it on .NET 10 and .NET 11.
+3. Open the successful **CI** run for the release commit on `main`. Download
+   the `nuget-package` artifact and find the package SHA-256 in the
+   verification step. CI keeps the artifact for seven days.
+
+## Publish the package
+
+Review the exact package alongside its source, Git history, repository
+metadata, and CI outputs. Resolve any findings and obtain the repository
+owner's approval for that package.
+
+In GitHub Actions, open **Publish to NuGet.org**, select `main`, and enter the
+CI run ID and package SHA-256. The workflow checks the digest and publishes
+the same archive using NuGet.org Trusted Publishing.
+
+After NuGet.org indexes the release, verify the version and package owner on
+the listing.
+
+## Configure Trusted Publishing
+
+The [NuGet.org policy](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)
+selects `bitavucom` as the package owner and grants permission to publish
+versions of `Bitavu.Client`. The workflow signs in as the account that created
+the policy.
+
+| Policy setting | Value |
 | --- | --- |
-| Repository owner | `bitavu` |
+| GitHub repository owner | `bitavu` |
 | Repository | `bitavu-dotnet` |
 | Workflow file | `publish.yml` |
 | Environment | `nuget` |
 | Package glob | `Bitavu.Client` |
-
-Enable the new-package scope for the first publication. Enable the new-version
-scope for later releases. NuGet.org may give the policy an initial seven-day
-activation window for a private GitHub repository. Configure it when the first
-reviewed release is ready.
-
-1. Review the package downloaded from the current `main` commit's CI run.
-   Inspect the exact archive, source, Git history, metadata, logs, and
-   artifacts before giving release approval.
-2. As the approved owner, run **Publish to NuGet.org** from `main` and enter
-   that CI run ID and the exact package SHA-256. The workflow verifies the
-   CI run and digest before requesting a short-lived publishing key. It can
-   also use the immediately preceding CI run if the only changes on
-   `main` are to the publish workflow or this release guide.
-3. After validation and indexing, verify the package version and owner on
-   NuGet.org.
