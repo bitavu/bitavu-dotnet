@@ -1,0 +1,90 @@
+name: Publish to NuGet.org
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: Successful main-branch CI run containing the reviewed package
+        required: true
+        type: string
+      package_sha256:
+        description: SHA-256 of the exact package approved for publication
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: nuget-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.repository == 'bitavu/bitavu-dotnet' &&
+      github.event.repository.private &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'muveaio' &&
+      github.triggering_actor == 'muveaio'
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      actions: read
+      id-token: write
+    steps:
+      - name: Verify the approved CI run
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          APPROVED_SHA256: ${{ inputs.package_sha256 }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:CI_RUN_ID -notmatch '\A[0-9]+\z' -or
+              $env:APPROVED_SHA256 -notmatch '\A[0-9a-fA-F]{64}\z') {
+              throw 'Enter a CI run ID and a SHA-256 digest.'
+          }
+          $runJson = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:CI_RUN_ID"
+          if ($LASTEXITCODE -ne 0) { throw 'Could not verify the CI run.' }
+          $run = $runJson | ConvertFrom-Json
+          if ($run.path -ne '.github/workflows/ci.yml' -or $run.event -ne 'push' -or
+              $run.head_branch -ne 'main' -or $run.head_sha -ne $env:GITHUB_SHA -or
+              $run.head_repository.full_name -ne $env:GITHUB_REPOSITORY -or
+              $run.status -ne 'completed' -or $run.conclusion -ne 'success') {
+              throw 'Select a successful CI run for the current main commit.'
+          }
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: nuget-package
+          path: release-package
+          run-id: ${{ inputs.ci_run_id }}
+          github-token: ${{ github.token }}
+      - name: Check the approved package digest
+        id: package
+        shell: pwsh
+        env:
+          APPROVED_SHA256: ${{ inputs.package_sha256 }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $files = @(Get-ChildItem -LiteralPath release-package -Force)
+          if ($files.Count -ne 1 -or $files[0].PSIsContainer -or
+              $files[0].Name -cnotmatch '\ABitavu\.Client\.[0-9]+\.[0-9]+\.[0-9]+(?:-[a-z0-9.]+)?\.nupkg\z') {
+              throw 'The artifact must contain exactly one Bitavu.Client package.'
+          }
+          if ((Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256).Hash -ne $env:APPROVED_SHA256) {
+              throw 'The downloaded package does not match the approved SHA-256.'
+          }
+          "path=release-package/$($files[0].Name)" >> $env:GITHUB_OUTPUT
+      - name: Sign in to NuGet.org
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        with:
+          user: bitavucom
+      - name: Publish the approved package
+        shell: pwsh
+        env:
+          PACKAGE_PATH: ${{ steps.package.outputs.path }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push $env:PACKAGE_PATH --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+          exit $LASTEXITCODE

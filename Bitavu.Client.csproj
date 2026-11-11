@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <PackageId>Bitavu.Client</PackageId>
+    <Version>0.1.1</Version>
+    <Authors>bitavu.com</Authors>
+    <Description>PDF generation for .NET. Generate PDFs from Bitavu templates and JSON data with this C# client.</Description>
+    <PackageProjectUrl>https://bitavu.com</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>bitavu;pdf;pdf-generation;pdf-rendering;reporting;templates</PackageTags>
+    <PackageOutputPath>$(MSBuildProjectDirectory)/artifacts</PackageOutputPath>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <IncludeSymbols>false</IncludeSymbols>
+    <IncludeSource>false</IncludeSource>
+    <EnableSourceLink>false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <PublishRepositoryUrl>false</PublishRepositoryUrl>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BitavuClient.cs;BitavuApiException.cs;BitavuPdf.cs;BitavuTemplates.cs" />
+    <None Include="README.md;LICENSE" Pack="true" PackagePath="/" />
+    <InternalsVisibleTo Include="Bitavu.Client.Verification" />
+  </ItemGroup>
+</Project>
