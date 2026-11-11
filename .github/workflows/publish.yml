@@ -30,6 +30,7 @@ jobs:
     environment: nuget
     permissions:
       actions: read
+      contents: read
       id-token: write
     steps:
       - name: Verify the approved CI run
@@ -48,10 +49,23 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Could not verify the CI run.' }
           $run = $runJson | ConvertFrom-Json
           if ($run.path -ne '.github/workflows/ci.yml' -or $run.event -ne 'push' -or
-              $run.head_branch -ne 'main' -or $run.head_sha -ne $env:GITHUB_SHA -or
+              $run.head_branch -ne 'main' -or $run.head_sha -notmatch '\A[0-9a-f]{40}\z' -or
               $run.head_repository.full_name -ne $env:GITHUB_REPOSITORY -or
               $run.status -ne 'completed' -or $run.conclusion -ne 'success') {
-              throw 'Select a successful CI run for the current main commit.'
+              throw 'Select a successful push CI run from main.'
+          }
+          if ($run.head_sha -ne $env:GITHUB_SHA) {
+              # Reuse an approved package after a publishing-only correction.
+              $comparisonJson = gh api "repos/$env:GITHUB_REPOSITORY/compare/$($run.head_sha)...$env:GITHUB_SHA"
+              if ($LASTEXITCODE -ne 0) { throw 'Could not compare the reviewed CI commit to main.' }
+              $comparison = $comparisonJson | ConvertFrom-Json
+              $files = @($comparison.files)
+              $allowedFiles = @('.github/workflows/publish.yml', 'RELEASING.md')
+              if ($comparison.status -ne 'ahead' -or $comparison.ahead_by -ne 1 -or
+                  $files.Count -lt 1 -or $files.Count -gt $allowedFiles.Count -or
+                  ($files | Where-Object { $_.filename -cnotin $allowedFiles -or $_.status -ne 'modified' })) {
+                  throw 'Select a successful CI run for the current main commit.'
+              }
           }
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -79,7 +93,7 @@ jobs:
         id: login
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         with:
-          user: bitavucom
+          user: bitavu
       - name: Publish the approved package
         shell: pwsh
         env:
